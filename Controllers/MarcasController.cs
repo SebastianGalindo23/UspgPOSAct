@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,10 +15,12 @@ namespace UspgPOS.Controllers
     public class MarcasController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly Cloudinary _cloudinary;
 
-        public MarcasController(AppDbContext context)
+        public MarcasController(AppDbContext context, Cloudinary cloudinary)
         {
             _context = context;
+            _cloudinary = cloudinary;
         }
 
         // GET: Marcas
@@ -54,10 +58,33 @@ namespace UspgPOS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Nombre")] Marcas marcas)
+        public async Task<IActionResult> Create([Bind("Id,Nombre")] Marcas marcas, IFormFile imageFile)
         {
             if (ModelState.IsValid)
             {
+                if (imageFile != null)
+                {
+
+                    var uploadParams = new ImageUploadParams()
+                    {
+                        File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream()),
+                        Transformation = new Transformation().Width(500).Height(500).Crop("fill")
+                    };
+
+                    var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+
+                    if (uploadResult.Error != null)
+                    {
+                        ModelState.AddModelError("", $"Error al subir imagen: {uploadResult.Error.Message}");
+                        return View(marcas); // Regresa a la vista si falla la subida
+                    }
+
+                    marcas.ImgUrl = uploadResult.SecureUrl.ToString();
+
+                    var thumbnailParams = new Transformation().Width(150).Height(150).Crop("thumb");
+                    marcas.ThumbnailUrl = _cloudinary.Api.UrlImgUp.Transform(thumbnailParams).BuildUrl(uploadResult.PublicId);
+
+                }
                 _context.Add(marcas);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -86,7 +113,7 @@ namespace UspgPOS.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long? id, [Bind("Id,Nombre")] Marcas marcas)
+        public async Task<IActionResult> Edit(long? id, [Bind("Id,Nombre")] Marcas marcas, IFormFile imageFile)
         {
             if (id != marcas.Id)
             {
@@ -95,8 +122,22 @@ namespace UspgPOS.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                try    
                 {
+                    if (imageFile != null)
+                    {
+                        var uploadParams = new ImageUploadParams()
+                        {
+                            File = new FileDescription(imageFile.FileName, imageFile.OpenReadStream()),
+                            Transformation = new Transformation().Width(500).Height(500).Crop("fill")
+                        };
+
+                        var uploadResult = await _cloudinary.UploadAsync(uploadParams);
+                        marcas.ImgUrl = uploadResult.SecureUrl.ToString();
+
+                        var thumbnailParams = new Transformation().Width(150).Height(150).Crop("thumb");
+                        marcas.ThumbnailUrl = _cloudinary.Api.UrlImgUp.Transform(thumbnailParams).BuildUrl(uploadResult.PublicId);
+                    }
                     _context.Update(marcas);
                     await _context.SaveChangesAsync();
                 }

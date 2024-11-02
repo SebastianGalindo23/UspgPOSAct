@@ -15,6 +15,7 @@ namespace UspgPOS.Models
 
         [Required]
         [Column("precio")]
+        [Range(0.01, 100000)]
         public decimal Precio { get; set; }
 
         [Required]
@@ -26,6 +27,12 @@ namespace UspgPOS.Models
 
         [Column("clasificacion_id")]
         public long ClasificacionesId { get; set; }
+
+        [Column("img_url")]
+        public string? ImgUrl { get; set; }
+
+        [Column("thumbnail_url")]
+        public string? ThumbnailUrl { get; set; }
 
         public Marcas? Marca { get; set; }
         public Clasificaciones? Clasificaciones { get; set; }

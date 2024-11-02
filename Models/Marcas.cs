@@ -13,5 +13,11 @@ namespace UspgPOS.Models
         [Required]
         [Column("nombre")]
         public string Nombre { get; set; }
+
+        [Column("img_url")]
+        public string? ImgUrl { get; set; }
+
+        [Column("thumbnail_url")]
+        public string? ThumbnailUrl { get; set; }
     }
 }

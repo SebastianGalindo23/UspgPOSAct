@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -37,6 +37,14 @@
                 <label asp-for="ClasificacionesId" class="control-label"></label>
                 <select asp-for="ClasificacionesId" class="form-control" asp-items="ViewBag.ClasificacionesId"></select>
                 <span asp-validation-for="ClasificacionesId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label>Imagen actual:</label><br />
+                <img src="@Model.ThumbnailUrl" style="max-width: 150px; max-height: 150px;" />
+            </div>
+            <div class="form-group">
+                <label for="imageFile" class="control-label">Nueva Imagen </label>
+                <input type="file" name="imageFile" class="form-control" />
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

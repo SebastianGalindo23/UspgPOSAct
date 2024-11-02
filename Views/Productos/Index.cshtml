@@ -27,6 +27,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Clasificaciones)
             </th>
+            <th>
+                Imagen
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -48,6 +51,16 @@
             <td>
                 @Html.DisplayFor(modelItem => item.Clasificaciones.Nombre)
             </td>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.ThumbnailUrl))
+                    {
+                        <img src="@item.ThumbnailUrl" style="max-width:100px; max-height:100px" />
+                    }
+                    else
+                    {
+                        <p> No hay imagen disponible </p>
+                    }
+                </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
