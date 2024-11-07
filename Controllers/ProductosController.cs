@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CloudinaryDotNet;
 using CloudinaryDotNet.Actions;
+using ExcelDataReader;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -200,6 +201,89 @@ namespace UspgPOS.Controllers
         private bool ProductosExists(long? id)
         {
             return _context.Productos.Any(e => e.Id == id);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CargarArchivo(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("Por favor, seleccione un archivo de Excel");
+            }
+
+            if (!file.FileName.EndsWith(".xlsx"))
+            {
+                return BadRequest("Por favor, seleccione un archivo de Excel");
+            }
+
+            using (var stream = file.OpenReadStream())
+            {
+                using (var reader = ExcelReaderFactory.CreateReader(stream))
+                {
+                    var dataTable = reader.AsDataSet().Tables[0];
+
+                    for (int fila = 1; fila < dataTable.Rows.Count; fila++)
+                    {
+                        string codigo = dataTable.Rows[fila][0].ToString();
+                        string nombre = dataTable.Rows[fila][1].ToString();
+                        string nombreMarca = dataTable.Rows[fila][2].ToString();
+                        string nombreClasificacion = dataTable.Rows[fila][3].ToString();
+                        decimal precio = decimal.Parse(dataTable.Rows[fila][4].ToString());
+                        int cantidad = int.Parse(dataTable.Rows[fila][5].ToString());
+
+                        Productos? producto = await _context.Productos.FirstOrDefaultAsync(p => p.Codigo == codigo);
+
+                        Marcas? marca = await _context.Marcas.FirstOrDefaultAsync(m => m.Nombre == nombreMarca);
+                       
+                        if (marca == null)
+                        {
+                            marca = new Marcas { Nombre = nombreMarca };
+                            _context.Marcas.Add(marca);
+                            await _context.SaveChangesAsync(); 
+                        }
+
+                        Clasificaciones? clasificacion = await _context.Clasificaciones.FirstOrDefaultAsync(c => c.Nombre == nombreClasificacion);
+
+                        if (clasificacion == null)
+                        {
+                            clasificacion = new Clasificaciones { Nombre = nombreClasificacion };
+                            _context.Clasificaciones.Add(clasificacion);
+                            await _context.SaveChangesAsync(); 
+                        }
+
+                        if (producto == null)
+                        {
+                            //Crear el producto
+                            Productos nuevoProducto = new Productos
+                            {
+                                Codigo = codigo,
+                                Nombre = nombre,
+                                Precio = precio,
+                                Cantidad = cantidad,
+                                MarcaId = marca.Id ?? -1,
+                                ClasificacionesId = clasificacion.Id ?? -1,
+                            };
+
+                            _context.Productos.Add(nuevoProducto);
+                        }
+                        else
+                        {
+                            //Editar el producto
+                            producto.Nombre = nombre;
+                            producto.MarcaId = marca.Id ?? -1;
+                            producto.ClasificacionesId = clasificacion.Id ?? -1;
+                            producto.Precio = precio;
+                            producto.Cantidad = cantidad;
+
+                            _context.Productos.Update(producto);
+                        }
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
         }
     }
 }
