@@ -18,6 +18,21 @@
             <div id="graficoCantidad"></div>
         </div>
     </div>
+    <div class="col-6">
+        <div class="card">
+            <div id="graficoSalarios"></div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div id="graficoAnosDeExperiencia"></div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div id="graficoCantidadContratacion"></div>
+        </div>
+    </div>
 </div>
 
 <style>
@@ -35,6 +50,10 @@
         const puntajeDesempeno = @Html.Raw(ViewBag.PuntajeDesempeno);
         const puntajeSatisfaccion = @Html.Raw(ViewBag.PuntajeSatisfaccion);
         const Cantidad = @Html.Raw(ViewBag.CantidadPorDepartamento);
+        const Salario = @Html.Raw(ViewBag.Salarios);
+        const Anos = @Html.Raw(ViewBag.AnosExperiencia);
+        const CantidadContratacion = @Html.Raw(ViewBag.CantidadContratacion);
+        const FechaContratacion = @Html.Raw(ViewBag.FechaContratacion);
 
         
 
@@ -90,7 +109,6 @@
             document.getElementById('graficoPuntajeDesemepenoSatisfaccion'),
             configuracionGraficoPuntajeDesemepenoSatisfaccion
         );
-
         graficoPuntajeDesemepenoSatisfaccion.render();
 
         const data = Cantidad.map(item => {
@@ -99,8 +117,6 @@
                 y: item.CantidadEmpleados
             };
         });
-
-        console.log(data)
         const configuracionGraficoCantidad = {
             series: [
                 {
@@ -118,12 +134,74 @@
                 text: 'Cantidad por Departamento'
             }
         };
-
         const graficoCantidad = new ApexCharts(
             document.getElementById('graficoCantidad'), 
             configuracionGraficoCantidad
         );
-
         graficoCantidad.render();
+
+        const configuracionGraficoSalario = {
+            chart: {
+                type: 'pie'
+            },
+            series: Salario,
+            labels: departamentos,
+            title: {
+                text: 'Tasa de Salarios Por Departamento'
+            }
+        };
+        const graficoSalario = new ApexCharts(
+            document.getElementById('graficoSalarios'),
+            configuracionGraficoSalario
+        );
+        graficoSalario.render();
+
+        const configuracionGraficoAnosExperiencia = {
+            chart: {
+                type: 'bar'
+            },
+            series: [
+                {
+                    name: 'Años de Experiencia',
+                    data: Anos.map(e => e.toFixed(0))
+                }
+            ],
+            xaxis: {
+                categories: departamentos
+            },
+            title: {
+                text: 'Nivel de Experiencia Experiencia por Departamento'
+            }
+        }
+
+        const graficoAnosExperiencia = new ApexCharts(
+            document.getElementById('graficoAnosDeExperiencia'),
+            configuracionGraficoAnosExperiencia
+        );
+        graficoAnosExperiencia.render();
+
+        const configuracionGraficoContratacion = {
+            chart: {
+                type: 'line'
+            },
+            series: [
+                {
+                    name: 'Personas Contratadas',
+                    data: CantidadContratacion
+                }
+            ],
+            xaxis: {
+                categories: FechaContratacion
+            },
+            title: {
+                text: 'Cantidad de contratacion por Año'
+            }
+        }
+
+        const graficoContratacion = new ApexCharts(
+            document.getElementById('graficoCantidadContratacion'),
+            configuracionGraficoContratacion
+        );
+        graficoContratacion.render();
     });
 </script>

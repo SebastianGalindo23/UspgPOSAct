@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using UspgPOS.Models;
 
 namespace UspgPOS.Controllers
@@ -81,10 +82,21 @@ namespace UspgPOS.Controllers
                     Departamento = grupo.Key,
                     PromedioDesempeno = grupo.Average(empleado => empleado.CalificacionDesempeno),
                     PromedioSatisfaccion = grupo.Average(empleado => empleado.NivelSatisfaccion)
+
                 })
                 .ToList();
 
-			var puntajesPorDepartamento = empleados
+            var promediosPorDcontratadosporaño = empleados
+                .GroupBy(empleado => empleado.FechaContratacion.Year)
+                .Select(grupo => new
+                {
+                    Año = grupo.Key,
+                    Cantidad = grupo.Count()       
+                })
+                .OrderBy(x => x.Año)
+                .ToList();
+
+            var puntajesPorDepartamento = empleados
 				.GroupBy(empleado => empleado.Departamento)
 				.Select(grupo => new {
 					Departamento = grupo.Key,
@@ -101,10 +113,21 @@ namespace UspgPOS.Controllers
                 })
                 .ToList();
 
-            
-                
+            var PromediosRestantesPorDepartamento = empleados
+               .GroupBy(empleado => empleado.Departamento)
+               .Select(grupo => new
+               {
+                   Departamento = grupo.Key,
+                   Salario = grupo.Average(empleado => empleado.Salario),
+                   PromedioAñosExperiencia = grupo.Average(empleado => empleado.AñosExperiencia),
+               })
+            .ToList();
 
-			ViewBag.Departamentos = JsonConvert.SerializeObject(promediosPorDepartamento.Select(grupo => grupo.Departamento).ToList());
+            ViewBag.FechaContratacion = JsonConvert.SerializeObject(promediosPorDcontratadosporaño.Select(grupo => grupo.Año).ToList());
+            ViewBag.CantidadContratacion = JsonConvert.SerializeObject(promediosPorDcontratadosporaño.Select(grupo => grupo.Cantidad).ToList());
+            ViewBag.Salarios = JsonConvert.SerializeObject(PromediosRestantesPorDepartamento.Select(grupo => grupo.Salario).ToList());
+            ViewBag.AnosExperiencia = JsonConvert.SerializeObject(PromediosRestantesPorDepartamento.Select(grupo => grupo.PromedioAñosExperiencia).ToList());
+            ViewBag.Departamentos = JsonConvert.SerializeObject(promediosPorDepartamento.Select(grupo => grupo.Departamento).ToList());
 			ViewBag.PromedioDesempeno = JsonConvert.SerializeObject(promediosPorDepartamento.Select(grupo => grupo.PromedioDesempeno).ToList());
 			ViewBag.PromedioSatisfaccion = JsonConvert.SerializeObject(promediosPorDepartamento.Select(grupo => grupo.PromedioSatisfaccion).ToList());
 			ViewBag.PuntajeDesempeno = JsonConvert.SerializeObject(puntajesPorDepartamento.Select(grupo => grupo.PuntajeDesempeno).ToList());
